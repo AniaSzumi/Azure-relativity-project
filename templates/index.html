@@ -7,18 +7,33 @@
 <body>
     <h1>Relativity project app</h1>
     <h2>Welcome {{ user.get("name") }}!</h2>
+    <a href="/logout">Logout</a>
 
-    <ul>
-    {% if config.get("ENDPOINT") %}
+    <!-- {% if config.get("ENDPOINT") %}
       <li><a href='/call_downstream_api'>Call a downstream API</a></li>
     {% endif %}
 
     {% if config.get("B2C_PROFILE_AUTHORITY") %}
       <li><a href='{{config.get("B2C_PROFILE_AUTHORITY")}}?client_id={{config.get("CLIENT_ID")}}'>Edit Profile</a></li>
-    {% endif %}
+    {% endif %} -->
 
-    <li><a href="/logout">Logout</a></li>
+    <h2>Movie Management</h2>
+    <ul>
+        {% for movie in movies %}
+            <li>
+                <strong>{{ movie.title }}</strong> (Director: {{ movie.director }})
+                <a href="{{ url_for('get_movie', movie_id=movie.id) }}">Details</a>
+            </li>
+        {% endfor %}
     </ul>
+
+    <form action="/add_movie" method="post">
+      <label for="title">Title:</label>
+      <input type="text" id="title" name="title" required>
+      <label for="director">Director:</label>
+      <input type="text" id="director" name="director" required>
+      <button type="submit">Add Movie</button>
+  </form>
 
     <hr>
     <footer style="text-align: right">Made by Anna Długosz</footer>
