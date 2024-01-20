@@ -3,12 +3,26 @@ import identity.web
 import requests
 from flask import Flask, redirect, render_template, request, session, url_for
 from flask_session import Session
-
+from opencensus.ext.flask.flask_middleware import FlaskMiddleware
+from opencensus.ext.azure import metrics_exporter
+from opencensus.ext.azure.log_exporter import AzureLogHandler
+import logging
+import db
 import app_config
 
 app = Flask(__name__)
 app.config.from_object(app_config)
 Session(app)
+
+middleware = FlaskMiddleware(app)
+
+exporter = metrics_exporter.new_metrics_exporter(
+    enable_standard_metrics=False,
+    connection_string=app.config['APPLICATIONINSIGHTS_CONNECTION_STRING'])
+
+logger = logging.getLogger(__name__)
+logger.addHandler(AzureLogHandler(connection_string=app.config['APPLICATIONINSIGHTS_CONNECTION_STRING']))
+logger.setLevel(logging.INFO)
 
 # This section is needed for url_for("foo", _external=True) to automatically
 # generate http scheme when this sample is running on localhost,
@@ -29,6 +43,9 @@ movies_db = [
     {"id": 2, "title": "Movie 2", "director": "Director 2"}
 ]
 
+def sum(a: int, b: int) -> int:
+    return a + b
+
 @app.route("/login")
 def login():
     return render_template("login.html", version=identity.__version__, **auth.log_in(
@@ -41,12 +58,15 @@ def login():
 def auth_response():
     result = auth.complete_log_in(request.args)
     if "error" in result:
+        logger.warning("Login failed")
         return render_template("auth_error.html", result=result)
+    logger.info("Login success")
     return redirect(url_for("index"))
 
 
 @app.route("/logout")
 def logout():
+    logger.info("Logout")
     return redirect(auth.log_out(url_for("index", _external=True)))
 
 
@@ -58,55 +78,53 @@ def index():
         return render_template('config_error.html')
     if not auth.get_user():
         return redirect(url_for("login"))
-    return render_template('index.html', user=auth.get_user(), version=identity.__version__, movies=movies_db)
+    db_movies = db.get_movies()
+    logger.info(f"Movies from db: {db_movies}")
+    return render_template('index.html', user=auth.get_user(), movies=db_movies)
+    # return render_template('index.html', movies=db_movies)
+
+@app.route("/exception")
+def exception():
+    a = 2
+    b = "a"
+
+    try:
+        sum(a,b)
+    except Exception:
+        logger.exception(Exception)
+
+    return redirect(url_for("index"))
+
 
 @app.route('/movies/<int:movie_id>')
 def get_movie(movie_id):
     if not auth.get_user():
         return redirect(url_for("login"))
-    movie = next((m for m in movies_db if m["id"] == movie_id), None)
+    movie = db.get_movie_details(movie_id)
     if movie:
-        return render_template('movie_detail.html', movie=movie)
+        return render_template('movie_detail.html', movie=movie, user=auth.get_user())
     else:
+        logger.error(f"Movie with id {movie_id} not found")
         return "Movie not found", 404
 
+@app.route('/add_movie')
+def add_movie_form():
+    if not auth.get_user():
+        return redirect(url_for("login"))
+    return render_template('add_movie.html', user=auth.get_user())
 
 @app.route('/add_movie', methods=['POST'])
 def add_movie():
-    if not auth.get_user():
-        return redirect(url_for("login"))
-    title = request.form.get('title')
-    director = request.form.get('director')
-
-    new_movie = {"id": len(movies_db) + 1, "title": title, "director": director}
-    movies_db.append(new_movie)
+    db.add_movie(request.form)
 
     return redirect(url_for('index'))
 
-
-@app.route('/update_movie/<int:movie_id>', methods=['POST'])
-def update_movie(movie_id):
-    if not auth.get_user():
-        return redirect(url_for("login"))
-    title = request.form.get('title')
-    director = request.form.get('director')
-
-    movie = next((m for m in movies_db if m["id"] == movie_id), None)
-    if movie:
-        movie['title'] = title
-        movie['director'] = director
-
-    return redirect(url_for('index'))
-
-
-@app.route('/delete_movie/<int:movie_id>')
-def delete_movie(movie_id):
-    if not auth.get_user():
-        return redirect(url_for("login"))
-    movie = next((m for m in movies_db if m["id"] == movie_id), None)
-    if movie:
-        movies_db.remove(movie)
-
+@app.route('/add_rating/<int:movie_id>', methods=['POST'])
+def add_rating(movie_id):
+    rating = int(request.form.get('rating'))
+    if rating > 10 or rating < 0:
+        return "Rating must be in range [1, 10]", 400
+    db.add_movie_rating(movie_id, rating)
     return redirect(url_for('index'))
 
 @app.route("/call_downstream_api")

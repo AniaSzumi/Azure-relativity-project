@@ -24,3 +24,18 @@ SCOPE = ["User.ReadBasic.All"]
 SESSION_TYPE = "filesystem"
 # Using the file system will not work in most production systems,
 # it's better to use a database-backed session store instead.
+
+DB_USER = os.getenv("DB_USER")
+DB_PASSWORD = os.getenv("DB_PASSWORD")
+DB_SERVER = os.getenv("DB_SERVER")
+DB = os.getenv("DB")
+
+APPLICATIONINSIGHTS_CONNECTION_STRING = os.getenv("APPLICATIONINSIGHTS_CONNECTION_STRING")
+sampler = 'opencensus.trace.samplers.ProbabilitySampler(rate=1.0)'
+OPENCENSUS = {
+    'TRACE': {
+        'SAMPLER': sampler,
+        'EXPORTER': 'opencensus.ext.azure.trace_exporter.AzureExporter(connection_string="'
+        + APPLICATIONINSIGHTS_CONNECTION_STRING + '")',
+    }
+}

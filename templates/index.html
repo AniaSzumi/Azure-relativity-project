@@ -1,42 +1,50 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <title>Relativity project app</title>
+	<meta charset="UTF-8">
+	<title>Movie ratings</title>
+	<link rel="stylesheet" href="static/styles.css">
 </head>
 <body>
-    <h1>Relativity project app</h1>
-    <h2>Welcome {{ user.get("name") }}!</h2>
-    <a href="/logout">Logout</a>
+	<div class="app-bar">
+		<h1>Movie ratings</h1>
+		<div>
+			<span class="username">{{ user.name }}</span>
+			<a class="light-hover" href="/logout">Logout</a>
+		</div>
+	</div>
 
-    <!-- {% if config.get("ENDPOINT") %}
-      <li><a href='/call_downstream_api'>Call a downstream API</a></li>
-    {% endif %}
+	<!-- {% if config.get("ENDPOINT") %}
+		<li><a href='/call_downstream_api'>Call a downstream API</a></li>
+	{% endif %}
 
-    {% if config.get("B2C_PROFILE_AUTHORITY") %}
-      <li><a href='{{config.get("B2C_PROFILE_AUTHORITY")}}?client_id={{config.get("CLIENT_ID")}}'>Edit Profile</a></li>
-    {% endif %} -->
-
-    <h2>Movie Management</h2>
-    <ul>
-        {% for movie in movies %}
-            <li>
-                <strong>{{ movie.title }}</strong> (Director: {{ movie.director }})
-                <a href="{{ url_for('get_movie', movie_id=movie.id) }}">Details</a>
-            </li>
-        {% endfor %}
-    </ul>
-
-    <form action="/add_movie" method="post">
-      <label for="title">Title:</label>
-      <input type="text" id="title" name="title" required>
-      <label for="director">Director:</label>
-      <input type="text" id="director" name="director" required>
-      <button type="submit">Add Movie</button>
-  </form>
-
-    <hr>
-    <footer style="text-align: right">Made by Anna Długosz</footer>
+	{% if config.get("B2C_PROFILE_AUTHORITY") %}
+		<li><a href='{{config.get("B2C_PROFILE_AUTHORITY")}}?client_id={{config.get("CLIENT_ID")}}'>Edit Profile</a></li>
+	{% endif %} -->
+	
+	<div class="container">
+		<h2 class="subpage-title gray">Movie list</h2>
+		<table>
+			<tr><th>Title</th><th>Director</th><th>Rating</th></tr>
+			{% for movie in movies %}
+			<tr>
+				<td>{{ movie.title }}</td> 
+				<td>{{ movie.director }}</td>
+				<td class="gray"><b>{{'%0.1f'| format(movie.rating|float)}}</b> from {{ movie.number_of_ratings }} votes</td>
+				<td class="no-border"><form class="inline-form" action="/add_rating/{{ movie.id }}" method="post">
+					<input class="number-input" type="number" id="rating" name="rating" min="1" max="10" required>
+					<button class="inline-button" type="submit">Add rating</button>
+				</form></td>
+				<td class="no-border">
+					<a href="{{ url_for('get_movie', movie_id=movie.id) }}">Details</a>
+					<!-- <a href="{{ url_for('get_movie', movie_id=movie.id) }}">Details</a> -->
+				</td>
+			</tr>
+			{% endfor %}
+		</table>
+		<h3><a href="{{ url_for('add_movie_form') }}">Add movie</a></h3>
+		
+	</div>
 </body>
 </html>
 
