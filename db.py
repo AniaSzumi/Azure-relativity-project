@@ -1,7 +1,6 @@
 import pyodbc
 import os
 
-# columns = ['id', 'name', 'director']
 columns = ['id', 'title', 'director', 'rating', 'number_of_ratings']
 
 def get_connection():
@@ -9,7 +8,6 @@ def get_connection():
     PASSWORD = os.getenv("DB_PASSWORD")
     SERVER = os.getenv("DB_SERVER")
     DATABASE = os.getenv("DB")
-    # connection_string = f"Driver={{ODBC Driver 18 for SQL Server}};Server=tcp:projekt-ad-serv.database.windows.net,1433;Database=projekt-ad-db;Uid=mvxcnjihhn;Pwd={your_password_here};Encrypt=yes;TrustServerCertificate=no;Connection Timeout=30;"
     connection_string = f"Driver={{ODBC Driver 18 for SQL Server}};Server={SERVER};Database={DATABASE};Uid={USERNAME};Pwd={PASSWORD};Encrypt=yes;TrustServerCertificate=no;Connection Timeout=30;"
 
     # connectionString = f'DRIVER={{ODBC Driver 18 for SQL Server}};SERVER={SERVER};DATABASE={DATABASE};UID={USERNAME};PWD={PASSWORD}'
@@ -26,7 +24,6 @@ def get_movies():
     cur.close()
     conn.close()
     return movies_struct
-    # return [{'id': 1, 'title': 'Movie 1', 'director': 'Director 1', 'rating': 4.8, 'number_of_ratings': 200}, {'id': 2, 'title': 'Movie 2', 'director': 'Director 2', 'rating': 4.7, 'number_of_ratings': 100}]
 
 def get_movie_details(movie_id):
     conn = get_connection()
@@ -42,7 +39,6 @@ def get_movie_details(movie_id):
     cur.close()
     conn.close()
     return movie
-    # return {'id': 1, 'title': 'Movie 1', 'director': 'Director 1', 'rating': 4.8, 'number_of_ratings': 200}
 
 def add_movie(form):
     conn = get_connection()

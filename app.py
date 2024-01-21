@@ -9,20 +9,24 @@ from opencensus.ext.azure.log_exporter import AzureLogHandler
 import logging
 import db
 import app_config
+from mock_logger import MockLogger
 
 app = Flask(__name__)
 app.config.from_object(app_config)
 Session(app)
 
-middleware = FlaskMiddleware(app)
+if app.config['APPLICATIONINSIGHTS_CONNECTION_STRING']:
+    middleware = FlaskMiddleware(app)
 
-exporter = metrics_exporter.new_metrics_exporter(
-    enable_standard_metrics=False,
-    connection_string=app.config['APPLICATIONINSIGHTS_CONNECTION_STRING'])
+    exporter = metrics_exporter.new_metrics_exporter(
+        enable_standard_metrics=False,
+        connection_string=app.config['APPLICATIONINSIGHTS_CONNECTION_STRING'])
 
-logger = logging.getLogger(__name__)
-logger.addHandler(AzureLogHandler(connection_string=app.config['APPLICATIONINSIGHTS_CONNECTION_STRING']))
-logger.setLevel(logging.INFO)
+    logger = logging.getLogger(__name__)
+    logger.addHandler(AzureLogHandler(connection_string=app.config['APPLICATIONINSIGHTS_CONNECTION_STRING']))
+    logger.setLevel(logging.INFO)
+else:
+    logger = MockLogger()
 
 # This section is needed for url_for("foo", _external=True) to automatically
 # generate http scheme when this sample is running on localhost,
@@ -37,11 +41,6 @@ auth = identity.web.Auth(
     client_id=app.config["CLIENT_ID"],
     client_credential=app.config["CLIENT_SECRET"],
 )
-
-movies_db = [
-    {"id": 1, "title": "Movie 1", "director": "Director 1"},
-    {"id": 2, "title": "Movie 2", "director": "Director 2"}
-]
 
 def sum(a: int, b: int) -> int:
     return a + b
