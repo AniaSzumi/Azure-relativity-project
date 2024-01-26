@@ -18,5 +18,5 @@ The Movie Rating App is a web application designed for browsing and managing a l
 
 **Continuous Integration and Deployment:** GitHub Actions is set up for automated build, test, and deployment processes.
 
-
-![System architecture](/Azure_archtecture.pdf)
+## System architecture
+![System architecture](/Architecture.png)
