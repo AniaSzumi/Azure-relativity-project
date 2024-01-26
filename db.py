@@ -9,7 +9,6 @@ def get_connection():
     SERVER = os.getenv("DB_SERVER")
     DATABASE = os.getenv("DB")
     connection_string = f"Driver={{ODBC Driver 18 for SQL Server}};Server={SERVER};Database={DATABASE};Uid={USERNAME};Pwd={PASSWORD};Encrypt=yes;TrustServerCertificate=no;Connection Timeout=30;"
-
     # connectionString = f'DRIVER={{ODBC Driver 18 for SQL Server}};SERVER={SERVER};DATABASE={DATABASE};UID={USERNAME};PWD={PASSWORD}'
     return pyodbc.connect(connection_string)
 
